@@ -97,7 +97,4 @@ impl Issue {
         !self.blocked_by.is_empty()
     }
 
-    pub fn blocks_others(&self) -> bool {
-        !self.blocks.is_empty()
-    }
 }

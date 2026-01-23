@@ -126,10 +126,6 @@ impl BeadsDb {
         Ok(issues)
     }
 
-    pub fn get_issue(&self, id: &str) -> Result<Option<Issue>> {
-        let issues = self.load_issues(None)?;
-        Ok(issues.into_iter().find(|i| i.id == id))
-    }
 
     pub fn db_path(&self) -> &Path {
         &self.db_path

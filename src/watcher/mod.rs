@@ -1,5 +1,5 @@
 use anyhow::Result;
-use notify::{EventKind, RecursiveMode, Watcher};
+use notify::{EventKind, RecursiveMode};
 use notify_debouncer_full::{new_debouncer, DebounceEventResult, Debouncer, FileIdMap};
 use std::path::Path;
 use std::sync::mpsc::{channel, Receiver};

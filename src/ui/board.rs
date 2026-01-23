@@ -106,7 +106,7 @@ fn render_column(f: &mut Frame, area: Rect, app: &App, column: Column) {
     f.render_widget(list, area);
 }
 
-fn format_issue_item(issue: &Issue, is_selected: bool) -> ListItem {
+fn format_issue_item(issue: &Issue, is_selected: bool) -> ListItem<'_> {
     let priority_color = match issue.priority.0 {
         0 => Color::Red,
         1 => Color::Yellow,
