@@ -62,7 +62,7 @@ impl BeadsDb {
                 i.description,
                 i.status,
                 COALESCE(i.priority, 2) as priority,
-                i.type,
+                i.issue_type,
                 i.assignee,
                 i.created_at,
                 i.updated_at,

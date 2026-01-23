@@ -1,8 +1,8 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
@@ -25,21 +25,33 @@ pub fn render_board(f: &mut Frame, app: &App) {
 }
 
 fn render_header(f: &mut Frame, area: Rect, app: &App) {
-    let label = app
-        .label_filter
+    let label = app.label_filter
         .as_ref()
-        .map(|l| format!("label: {}", l))
-        .unwrap_or_else(|| "all issues".to_string());
+        .map(|l| format!("🏷  label: {}", l))
+        .unwrap_or_else(|| "📋 all issues".to_string());
 
-    let title = format!(" brui - Beads Kanban  [{}] ", label);
+    // Create multi-span line with visual separators
+    let header_line = Line::from(vec![
+        Span::styled(" ▓▓ ", Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD)),
+        Span::styled("BRUI", Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD)),
+        Span::styled("  │  ", Style::default().fg(Color::DarkGray)),
+        Span::raw("Beads Kanban"),
+        Span::styled("  │  ", Style::default().fg(Color::DarkGray)),
+        Span::styled(&label, Style::default().fg(Color::Yellow)),
+    ]);
 
     let block = Block::default()
         .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)  // Use rounded corners
         .style(Style::default().fg(Color::Cyan));
 
-    let paragraph = Paragraph::new(title)
+    let paragraph = Paragraph::new(header_line)
         .block(block)
-        .style(Style::default().add_modifier(Modifier::BOLD));
+        .alignment(Alignment::Left);
 
     f.render_widget(paragraph, area);
 }
