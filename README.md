@@ -2,21 +2,6 @@
 
 A beautiful, interactive terminal UI for viewing your Beads issues in a Kanban board layout.
 
-## ⚓ Arrr, Here Be Dragons! ☠️
-
-**AHOY MATEY!** This here ship be sailed by one lone captain on macOS seas. She runs fine fer me treasure hunts, but I be makin' **NO PROMISES** fer yer voyages!
-
-🏴‍☠️ **The Code of the Seven Seas:**
-
-❌ **No PRs accepted** - Me day job keeps me busy plunderin' corporate gold, no time fer code reviews!
-❌ **No issues/features** - If ye find bugs, they be yer shipmates now!
-✅ **Fork away, ye scallywag!** - Take the code, fix it, expand it, make it yer own vessel!
-✅ **Sail at yer own risk** - Tested only on me Mac ship. Linux? Windows? Uncharted waters!
-
-*If this tool sinks yer codebase, don't come cryin' to me. Ye've been warned!* 🏴‍☠️
-
-**Now hoist the colors and let's write some code!** ⚓
-
 ## Features
 
 - **Kanban Board View**: See issues organized by status (Open, In Progress, Done)
