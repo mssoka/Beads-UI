@@ -34,9 +34,31 @@ impl BeadsDb {
         }
     }
 
+    /// Creates a new database connection with proper WAL handling.
+    ///
+    /// This method includes a PASSIVE WAL checkpoint to ensure that when
+    /// brui reloads after external changes (from bd CLI), it sees the
+    /// latest committed data. Without this, SQLite's WAL snapshot isolation
+    /// can cause new connections to read stale data from old WAL frames.
+    ///
+    /// The PASSIVE checkpoint is non-blocking and won't interfere with
+    /// concurrent writers (bd CLI).
     fn connect(&self) -> Result<Connection> {
-        Connection::open(&self.db_path)
-            .with_context(|| format!("Failed to open database: {}", self.db_path.display()))
+        let conn = Connection::open(&self.db_path)
+            .with_context(|| format!("Failed to open database: {}", self.db_path.display()))?;
+
+        // Execute PASSIVE WAL checkpoint to ensure we read latest data
+        // This is critical for cross-process updates (bd CLI writes, brui reads)
+        // PASSIVE mode returns immediately if checkpoint can't complete
+        match conn.execute_batch("PRAGMA wal_checkpoint(PASSIVE);") {
+            Ok(_) => {},
+            Err(e) => {
+                // Log warning but continue - we can still function with slightly stale data
+                eprintln!("Warning: WAL checkpoint failed: {}", e);
+            }
+        }
+
+        Ok(conn)
     }
 
     pub fn load_issues(&self, label_filter: Option<&str>) -> Result<Vec<Issue>> {
