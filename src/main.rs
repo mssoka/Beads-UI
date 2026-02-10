@@ -82,11 +82,24 @@ fn run_app(
     watcher: Option<FileWatcher>,
 ) -> Result<()> {
     loop {
-        // Draw UI
+        // Draw UI and capture scroll info from detail view
+        let mut new_scroll_max: u16 = 0;
+        let mut new_viewport_height: u16 = 0;
+
         terminal.draw(|f| match app.current_view {
             View::Board => ui::render_board(f, app),
-            View::Detail => ui::render_detail(f, app),
+            View::Detail => {
+                let (sm, vh) = ui::render_detail(f, app);
+                new_scroll_max = sm;
+                new_viewport_height = vh;
+            }
+            View::Search => ui::render_search(f, app),
         })?;
+
+        // Update scroll state after render
+        app.detail_scroll_max = new_scroll_max;
+        app.detail_viewport_height = new_viewport_height;
+        app.detail_scroll = app.detail_scroll.min(app.detail_scroll_max);
 
         // Check for file changes
         if let Some(ref w) = watcher {
@@ -96,10 +109,8 @@ fn run_app(
         }
 
         // Handle events
-        if let Some(event) = app.poll_event()? {
-            if let Event::Key(key) = event {
-                app.handle_key(key)?;
-            }
+        if let Some(Event::Key(key)) = app.poll_event()? {
+            app.handle_key(key)?;
         }
 
         // Check if should quit

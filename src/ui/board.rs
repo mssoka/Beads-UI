@@ -1,12 +1,13 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
 use super::app::{App, Column};
+use super::theme::*;
 use crate::beads::Issue;
 
 pub fn render_board(f: &mut Frame, app: &App) {
@@ -33,21 +34,22 @@ fn render_header(f: &mut Frame, area: Rect, app: &App) {
     // Create multi-span line with visual separators
     let header_line = Line::from(vec![
         Span::styled(" ▓▓ ", Style::default()
-            .fg(Color::Cyan)
+            .fg(COLOR_HEADER)
+            .bg(COLOR_HEADER_BG)
             .add_modifier(Modifier::BOLD)),
         Span::styled("BRUI", Style::default()
-            .fg(Color::Cyan)
+            .fg(COLOR_HEADER)
             .add_modifier(Modifier::BOLD)),
-        Span::styled("  │  ", Style::default().fg(Color::DarkGray)),
+        Span::styled("  │  ", Style::default().fg(COLOR_SEPARATOR)),
         Span::raw("Beads Kanban"),
-        Span::styled("  │  ", Style::default().fg(Color::DarkGray)),
-        Span::styled(&label, Style::default().fg(Color::Yellow)),
+        Span::styled("  │  ", Style::default().fg(COLOR_SEPARATOR)),
+        Span::styled(&label, Style::default().fg(COLOR_IN_PROGRESS)),
     ]);
 
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)  // Use rounded corners
-        .style(Style::default().fg(Color::Cyan));
+        .style(Style::default().fg(COLOR_HEADER));
 
     let paragraph = Paragraph::new(header_line)
         .block(block)
@@ -76,15 +78,15 @@ fn render_column(f: &mut Frame, area: Rect, app: &App, column: Column) {
     let is_selected = app.selected_column == column;
 
     let (title, color) = match column {
-        Column::Open => (format!("OPEN ({})", issues.len()), Color::Cyan),
-        Column::InProgress => (format!("IN PROGRESS ({})", issues.len()), Color::Yellow),
-        Column::Done => (format!("DONE ({})", issues.len()), Color::Green),
+        Column::Open => (format!("OPEN ({})", issues.len()), COLOR_OPEN),
+        Column::InProgress => (format!("IN PROGRESS ({})", issues.len()), COLOR_IN_PROGRESS),
+        Column::Done => (format!("DONE ({})", issues.len()), COLOR_DONE),
     };
 
     let border_style = if is_selected {
         Style::default().fg(color).add_modifier(Modifier::BOLD)
     } else {
-        Style::default().fg(Color::DarkGray)
+        Style::default().fg(COLOR_BORDER)
     };
 
     let block = Block::default()
@@ -107,20 +109,14 @@ fn render_column(f: &mut Frame, area: Rect, app: &App, column: Column) {
 }
 
 fn format_issue_item(issue: &Issue, is_selected: bool) -> ListItem<'_> {
-    let priority_color = match issue.priority.0 {
-        0 => Color::Red,
-        1 => Color::Yellow,
-        2 => Color::Blue,
-        3 => Color::Gray,
-        _ => Color::DarkGray,
-    };
+    let priority_clr = priority_color(issue.priority.0);
 
     let mut spans = vec![
         Span::styled(
             format!("{} ", issue.priority.label()),
-            Style::default().fg(priority_color).add_modifier(Modifier::BOLD),
+            Style::default().fg(priority_clr).add_modifier(Modifier::BOLD),
         ),
-        Span::styled(&issue.id, Style::default().fg(Color::DarkGray)),
+        Span::styled(&issue.id, Style::default().fg(COLOR_SECONDARY_TEXT)),
         Span::raw(" "),
         Span::raw(&issue.title),
     ];
@@ -129,13 +125,13 @@ fn format_issue_item(issue: &Issue, is_selected: bool) -> ListItem<'_> {
         spans.push(Span::raw(" "));
         spans.push(Span::styled(
             "🚫",
-            Style::default().fg(Color::Red),
+            Style::default().fg(COLOR_BLOCKED),
         ));
     }
 
     let style = if is_selected {
         Style::default()
-            .bg(Color::DarkGray)
+            .bg(COLOR_SELECTED_BG)
             .add_modifier(Modifier::BOLD)
     } else {
         Style::default()
@@ -145,7 +141,7 @@ fn format_issue_item(issue: &Issue, is_selected: bool) -> ListItem<'_> {
 }
 
 fn render_footer(f: &mut Frame, area: Rect) {
-    let help = "[←/→ or h/l] Navigate  [↑/↓ or k/j] Select  [Enter] Details  [r] Refresh  [q] Quit";
-    let paragraph = Paragraph::new(help).style(Style::default().fg(Color::DarkGray));
+    let help = "[←/→ or h/l] Navigate  [↑/↓ or k/j] Select  [Enter] Details  [/] Search  [r] Refresh  [q] Quit";
+    let paragraph = Paragraph::new(help).style(Style::default().fg(COLOR_HELP_TEXT));
     f.render_widget(paragraph, area);
 }

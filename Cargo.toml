@@ -8,8 +8,10 @@ license = "MIT"
 
 [dependencies]
 # TUI Framework
-ratatui = "0.29"
+ratatui = { version = "0.29", features = ["palette", "unstable-rendered-line-info"] }
+ratatui-core = "0.1"
 crossterm = "0.28"
+tui-markdown = "0.3"
 
 # Async runtime
 tokio = { version = "1.41", features = ["full"] }
@@ -34,3 +36,6 @@ chrono = "0.4"
 
 # CLI
 clap = { version = "4.5", features = ["derive"] }
+
+# Fuzzy search
+fuzzy-matcher = "0.3"
