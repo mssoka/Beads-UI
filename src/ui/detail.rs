@@ -89,7 +89,7 @@ fn render_detail_metadata(f: &mut Frame, area: Rect, issue: &Issue) {
     }
 
     // Dependencies
-    if !issue.blocked_by.is_empty() {
+    if issue.dependency_count > 0 {
         lines.push(Line::from(vec![
             Span::styled(
                 "Blocked by: ",
@@ -97,11 +97,11 @@ fn render_detail_metadata(f: &mut Frame, area: Rect, issue: &Issue) {
                     .fg(COLOR_BLOCKED)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw(issue.blocked_by.join(", ")),
+            Span::raw(format!("{} issue(s)", issue.dependency_count)),
         ]));
     }
 
-    if !issue.blocks.is_empty() {
+    if issue.dependent_count > 0 {
         lines.push(Line::from(vec![
             Span::styled(
                 "Blocks: ",
@@ -109,7 +109,7 @@ fn render_detail_metadata(f: &mut Frame, area: Rect, issue: &Issue) {
                     .fg(COLOR_BLOCKS)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw(issue.blocks.join(", ")),
+            Span::raw(format!("{} issue(s)", issue.dependent_count)),
         ]));
     }
 

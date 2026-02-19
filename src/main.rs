@@ -12,7 +12,7 @@ use crossterm::{
 use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io;
 
-use beads::BeadsDb;
+use beads::BeadsClient;
 use ui::{App, View};
 use watcher::FileWatcher;
 
@@ -37,9 +37,9 @@ struct Cli {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // Find and open beads database
-    let beads_dir = BeadsDb::find_beads_dir()?;
-    let db = BeadsDb::new(&beads_dir)?;
+    // Find beads project
+    let beads_dir = BeadsClient::find_beads_dir()?;
+    let client = BeadsClient::new(beads_dir.clone())?;
 
     // Set up label filter
     let label_filter = if cli.all {
@@ -52,11 +52,11 @@ fn main() -> Result<()> {
     let watcher = if cli.no_watch {
         None
     } else {
-        Some(FileWatcher::new(db.db_path())?)
+        Some(FileWatcher::new(&beads_dir)?)
     };
 
     // Create app
-    let mut app = App::new(db, label_filter)?;
+    let mut app = App::new(client, label_filter)?;
 
     // Set up terminal
     enable_raw_mode()?;

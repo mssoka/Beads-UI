@@ -1,6 +1,37 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+fn default_priority() -> u8 {
+    2
+}
+
+/// Intermediate struct matching `bd list --json` output exactly.
+#[derive(Debug, Deserialize)]
+pub struct BdIssue {
+    pub id: String,
+    pub title: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub status: String,
+    #[serde(default = "default_priority")]
+    pub priority: u8,
+    #[serde(default)]
+    pub issue_type: String,
+    #[serde(default)]
+    pub owner: String,
+    #[serde(default)]
+    pub labels: Vec<String>,
+    #[serde(default)]
+    pub dependency_count: u32,
+    #[serde(default)]
+    pub dependent_count: u32,
+    #[serde(default)]
+    pub created_at: String,
+    #[serde(default)]
+    pub updated_at: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Issue {
     pub id: String,
@@ -13,8 +44,8 @@ pub struct Issue {
     pub assignee: Option<String>,
     pub created_at: String,
     pub updated_at: String,
-    pub blocked_by: Vec<String>,
-    pub blocks: Vec<String>,
+    pub dependency_count: u32,
+    pub dependent_count: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -23,6 +54,9 @@ pub enum Status {
     Open,
     InProgress,
     Closed,
+    Blocked,
+    Deferred,
+    Unknown,
 }
 
 impl fmt::Display for Status {
@@ -31,17 +65,22 @@ impl fmt::Display for Status {
             Status::Open => write!(f, "open"),
             Status::InProgress => write!(f, "in_progress"),
             Status::Closed => write!(f, "closed"),
+            Status::Blocked => write!(f, "blocked"),
+            Status::Deferred => write!(f, "deferred"),
+            Status::Unknown => write!(f, "unknown"),
         }
     }
 }
 
 impl Status {
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn from_str(s: &str) -> Status {
         match s {
-            "open" => Some(Status::Open),
-            "in_progress" => Some(Status::InProgress),
-            "closed" => Some(Status::Closed),
-            _ => None,
+            "open" => Status::Open,
+            "in_progress" => Status::InProgress,
+            "closed" | "completed" => Status::Closed,
+            "blocked" => Status::Blocked,
+            "deferred" => Status::Deferred,
+            _ => Status::Unknown,
         }
     }
 }
@@ -79,6 +118,8 @@ pub enum IssueType {
     Bug,
     Feature,
     Epic,
+    Chore,
+    Other,
 }
 
 impl fmt::Display for IssueType {
@@ -88,13 +129,54 @@ impl fmt::Display for IssueType {
             IssueType::Bug => write!(f, "bug"),
             IssueType::Feature => write!(f, "feature"),
             IssueType::Epic => write!(f, "epic"),
+            IssueType::Chore => write!(f, "chore"),
+            IssueType::Other => write!(f, "other"),
+        }
+    }
+}
+
+impl From<BdIssue> for Issue {
+    fn from(bd: BdIssue) -> Self {
+        let status = Status::from_str(&bd.status);
+        let priority = Priority::new(bd.priority);
+        let issue_type = match bd.issue_type.as_str() {
+            "bug" => IssueType::Bug,
+            "feature" => IssueType::Feature,
+            "epic" => IssueType::Epic,
+            "task" => IssueType::Task,
+            "chore" => IssueType::Chore,
+            _ => IssueType::Other,
+        };
+        let assignee = if bd.owner.is_empty() {
+            None
+        } else {
+            Some(bd.owner)
+        };
+        let description = if bd.description.is_empty() {
+            None
+        } else {
+            Some(bd.description)
+        };
+
+        Issue {
+            id: bd.id,
+            title: bd.title,
+            description,
+            status,
+            priority,
+            issue_type,
+            labels: bd.labels,
+            assignee,
+            created_at: bd.created_at,
+            updated_at: bd.updated_at,
+            dependency_count: bd.dependency_count,
+            dependent_count: bd.dependent_count,
         }
     }
 }
 
 impl Issue {
     pub fn is_blocked(&self) -> bool {
-        !self.blocked_by.is_empty()
+        self.dependency_count > 0
     }
-
 }

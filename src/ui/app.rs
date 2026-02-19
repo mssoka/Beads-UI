@@ -4,7 +4,7 @@ use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
 use std::time::Duration;
 
-use crate::beads::{BeadsDb, Issue, Status};
+use crate::beads::{BeadsClient, Issue, Status};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum View {
@@ -37,11 +37,11 @@ impl Column {
         }
     }
 
-    pub fn status(&self) -> Status {
+    pub fn status(&self) -> Vec<Status> {
         match self {
-            Column::Open => Status::Open,
-            Column::InProgress => Status::InProgress,
-            Column::Done => Status::Closed,
+            Column::Open => vec![Status::Open, Status::Blocked, Status::Deferred, Status::Unknown],
+            Column::InProgress => vec![Status::InProgress],
+            Column::Done => vec![Status::Closed],
         }
     }
 }
@@ -54,7 +54,7 @@ pub struct SearchResult {
 }
 
 pub struct App {
-    pub db: BeadsDb,
+    pub db: BeadsClient,
     pub label_filter: Option<String>,
     pub issues: Vec<Issue>,
     pub current_view: View,
@@ -72,7 +72,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(db: BeadsDb, label_filter: Option<String>) -> Result<Self> {
+    pub fn new(db: BeadsClient, label_filter: Option<String>) -> Result<Self> {
         let mut app = App {
             db,
             label_filter,
@@ -105,10 +105,10 @@ impl App {
     }
 
     pub fn get_column_issues(&self, column: Column) -> Vec<&Issue> {
-        let status = column.status();
+        let statuses = column.status();
         self.issues
             .iter()
-            .filter(|i| i.status == status)
+            .filter(|i| statuses.contains(&i.status))
             .collect()
     }
 
@@ -216,9 +216,8 @@ impl App {
                     let issue_id = result.issue_id.clone();
                     // Find the issue and navigate to its position on the board
                     if let Some(issue) = self.issues.iter().find(|i| i.id == issue_id) {
-                        let status = issue.status;
-                        let col = match status {
-                            Status::Open => Column::Open,
+                        let col = match issue.status {
+                            Status::Open | Status::Blocked | Status::Deferred | Status::Unknown => Column::Open,
                             Status::InProgress => Column::InProgress,
                             Status::Closed => Column::Done,
                         };
