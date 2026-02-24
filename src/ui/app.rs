@@ -69,6 +69,8 @@ pub struct App {
     pub search_query: String,
     pub search_results: Vec<SearchResult>,
     pub search_selected: usize,
+    // Error status
+    pub status_message: Option<String>,
 }
 
 impl App {
@@ -87,6 +89,7 @@ impl App {
             search_query: String::new(),
             search_results: Vec::new(),
             search_selected: 0,
+            status_message: None,
         };
         app.reload_issues()?;
         Ok(app)
@@ -102,6 +105,13 @@ impl App {
             self.update_search_results();
         }
         Ok(())
+    }
+
+    pub fn try_reload_issues(&mut self) {
+        match self.reload_issues() {
+            Ok(()) => self.status_message = None,
+            Err(e) => self.status_message = Some(format!("Refresh failed: {e}")),
+        }
     }
 
     pub fn get_column_issues(&self, column: Column) -> Vec<&Issue> {
@@ -135,7 +145,7 @@ impl App {
                 self.should_quit = true;
             }
             KeyCode::Char('r') => {
-                self.reload_issues()?;
+                self.try_reload_issues();
             }
             KeyCode::Left | KeyCode::Char('h') => {
                 self.selected_column = self.selected_column.prev();

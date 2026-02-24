@@ -104,7 +104,7 @@ fn run_app(
         // Check for file changes
         if let Some(ref w) = watcher {
             if w.poll().is_some() {
-                app.reload_issues()?;
+                app.try_reload_issues();
             }
         }
 

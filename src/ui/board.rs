@@ -22,7 +22,7 @@ pub fn render_board(f: &mut Frame, app: &App) {
 
     render_header(f, chunks[0], app);
     render_columns(f, chunks[1], app);
-    render_footer(f, chunks[2]);
+    render_footer(f, chunks[2], app);
 }
 
 fn render_header(f: &mut Frame, area: Rect, app: &App) {
@@ -140,8 +140,12 @@ fn format_issue_item(issue: &Issue, is_selected: bool) -> ListItem<'_> {
     ListItem::new(Line::from(spans)).style(style)
 }
 
-fn render_footer(f: &mut Frame, area: Rect) {
-    let help = "[←/→ or h/l] Navigate  [↑/↓ or k/j] Select  [Enter] Details  [/] Search  [r] Refresh  [q] Quit";
-    let paragraph = Paragraph::new(help).style(Style::default().fg(COLOR_HELP_TEXT));
+fn render_footer(f: &mut Frame, area: Rect, app: &App) {
+    let paragraph = if let Some(ref msg) = app.status_message {
+        Paragraph::new(msg.as_str()).style(Style::default().fg(COLOR_BLOCKED))
+    } else {
+        let help = "[←/→ or h/l] Navigate  [↑/↓ or k/j] Select  [Enter] Details  [/] Search  [r] Refresh  [q] Quit";
+        Paragraph::new(help).style(Style::default().fg(COLOR_HELP_TEXT))
+    };
     f.render_widget(paragraph, area);
 }
